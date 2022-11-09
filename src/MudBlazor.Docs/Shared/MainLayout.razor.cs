@@ -34,6 +34,7 @@ namespace MudBlazor.Docs.Shared
         {
             var defaultDarkMode = await _mudThemeProvider.GetSystemPreference();
             await LayoutService.ApplyUserPreferences(defaultDarkMode);
+            await _mudThemeProvider.WatchDarkThemeMedia(); //ToDo: Find the correct place to call WatchDarkThemeMedia, this component is disposed.
         }
 
         public void Dispose()

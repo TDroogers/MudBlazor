@@ -8,7 +8,7 @@ using MudBlazor.Utilities;
 
 namespace MudBlazor
 {
-    public class BaseMudThemeProvider : ComponentBase
+    public class BaseMudThemeProvider : ComponentBase, IDisposable //ToDo Removoe Disposable
     {
         /// <summary>
         /// The theme used by the application.
@@ -39,6 +39,17 @@ namespace MudBlazor
         public async Task<bool> GetSystemPreference()
         {
             return await JsRuntime.InvokeAsync<bool>("darkModeChange", _dotNetRef);
+        }
+
+        public async Task WatchDarkThemeMedia()
+        {
+            await JsRuntime.InvokeVoidAsync("watchDarkThemeMedia", _dotNetRef);
+        }
+
+        [JSInvokable]
+        public void SystemPreferenceChanged(bool isDarkMode)
+        {
+            IsDarkMode = isDarkMode;
         }
 
         internal bool _isDarkMode;
@@ -117,7 +128,7 @@ namespace MudBlazor
             if (Theme == null)
                 return;
             var palette = _isDarkMode == false ? Theme.Palette : Theme.PaletteDark;
-            
+
             //Palette
             theme.AppendLine($"--{Palette}-black: {palette.Black};");
             theme.AppendLine($"--{Palette}-white: {palette.White};");
@@ -408,6 +419,12 @@ namespace MudBlazor
             theme.AppendLine($"--{Zindex}-popover: {Theme.ZIndex.Popover};");
             theme.AppendLine($"--{Zindex}-snackbar: {Theme.ZIndex.Snackbar};");
             theme.AppendLine($"--{Zindex}-tooltip: {Theme.ZIndex.Tooltip};");
+        }
+
+        public void Dispose()
+        {
+            //Apperently this doesn't work because it is deprecated...
+            Console.WriteLine("Disposed");
         }
     }
 }
