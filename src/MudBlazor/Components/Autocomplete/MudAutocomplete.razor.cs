@@ -24,7 +24,7 @@ namespace MudBlazor
         private bool _isCleared;
         private bool _isClearing;
         private bool _isProcessingValue;
-        private int _selectedListItemIndex = 0;
+        private int _selectedListItemIndex = -1;
         private int _elementKey = 0;
         private int _itemsReturned; //the number of items returned by the search function
         private bool _isOpen;
@@ -523,13 +523,19 @@ namespace MudBlazor
 
             var enabledItems = _items.Select((item, idx) => (item, idx)).Where(tuple => ItemDisabledFunc?.Invoke(tuple.item) != true).ToList();
             _enabledItemIndices = enabledItems.Select(tuple => tuple.idx).ToList();
+
+            if (!searchingWhileSelected && !Strict && Value != null && _items != null && Array.IndexOf(_items, Value) >= 0)
+            {
+                searchingWhileSelected = true;
+            }
+            
             if (searchingWhileSelected) //compute the index of the currently select value, if it exists
             {
                 _selectedListItemIndex = Array.IndexOf(_items, Value);
             }
             else
             {
-                _selectedListItemIndex = _enabledItemIndices.Any() ? _enabledItemIndices.First() : -1;
+                _selectedListItemIndex = -1;
             }
 
             IsOpen = true;

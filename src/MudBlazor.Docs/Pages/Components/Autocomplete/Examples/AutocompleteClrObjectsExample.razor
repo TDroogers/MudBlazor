@@ -9,7 +9,7 @@
                          SearchFunc="@Search" ToStringFunc="@(e=> e==null?null : $"{e.Name} ({e.Sign})")" />
     </MudItem>
     <MudItem xs="12" sm="6" md="4">
-        <MudAutocomplete T="Element" Label="Periodic Table Element" @bind-Value="value2" 
+        <MudAutocomplete T="Element" Label="Periodic Table Element" @bind-Value="value2" Strict="false"
                          SearchFunc="@Search" ToStringFunc="@(e=> e==null?null : $"{e.Name} ({e.Sign})")">
             <ItemTemplate Context="e">                          
                 <MudText>
