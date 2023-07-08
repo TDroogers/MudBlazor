@@ -15,6 +15,17 @@
         <DocsPageSection>
             <SectionHeader Title="Usage">
                 <Description>
+                    Dialog with tabs
+                </Description>
+            </SectionHeader>
+            <SectionContent Codes="@(new[] {new CodeFile("Page.razor", "DialogWithTabsExample"), new CodeFile("Dialog.razor", "DialogWithTabsExample_Dialog")})">
+                <DialogWithTabsExample />
+            </SectionContent>
+        </DocsPageSection>
+
+        <DocsPageSection>
+            <SectionHeader Title="Usage">
+                <Description>
                     Suppose you define a <CodeInline>MudDialog</CodeInline> in <CodeInline Class="docs-code-tertiary">TermsOfServiceDialog.razor</CodeInline>.
                     To show the dialog you simply call:
                     <p>
