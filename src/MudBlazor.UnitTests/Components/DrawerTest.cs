@@ -6,9 +6,9 @@ using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.JSInterop;
-using Moq;
 using MudBlazor.Services;
 using MudBlazor.UnitTests.TestComponents;
+using NSubstitute;
 using NUnit.Framework;
 using static Bunit.ComponentParameterFactory;
 
@@ -22,13 +22,11 @@ namespace MudBlazor.UnitTests.Components
         public override void Setup()
         {
             base.Setup();
-            var jsRuntimeMock = new Mock<IJSRuntime>();
-            _browserViewportService = new BrowserViewportService(NullLogger<BrowserViewportService>.Instance, jsRuntimeMock.Object);
+            var jsRuntimeMock = Substitute.For<IJSRuntime>();
+            _browserViewportService = new BrowserViewportService(NullLogger<BrowserViewportService>.Instance, jsRuntimeMock);
             // Initial browser size is Md
-            jsRuntimeMock
-                .Setup(expression => expression.InvokeAsync<BrowserWindowSize>("mudResizeListener.getBrowserWindowSize", It.IsAny<object[]>()))
-                .ReturnsAsync(new BrowserWindowSize { Height = 640, Width = 960 })
-                .Verifiable();
+            jsRuntimeMock.InvokeAsync<BrowserWindowSize>("mudResizeListener.getBrowserWindowSize", Arg.Any<object[]>)
+                .Returns(new BrowserWindowSize { Height = 640, Width = 960 });
 
             Context.Services.AddScoped<IBrowserViewportService>(_ => _browserViewportService);
         }

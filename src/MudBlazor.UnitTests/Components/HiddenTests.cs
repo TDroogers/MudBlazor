@@ -6,9 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.JSInterop;
 using Microsoft.JSInterop.Infrastructure;
-using Moq;
 using MudBlazor.Services;
 using MudBlazor.UnitTests.TestComponents;
+using NSubstitute;
 using NUnit.Framework;
 
 #nullable enable
@@ -31,13 +31,11 @@ namespace MudBlazor.UnitTests.Components
                     : new BrowserWindowSize { Height = 1080, Width = 1920 }; //Xl
             }
 
-            var jsRuntimeMock = new Mock<IJSRuntime>();
-            var browserViewportService = new BrowserViewportService(NullLogger<BrowserViewportService>.Instance, jsRuntimeMock.Object);
+            var jsRuntimeMock = Substitute.For<IJSRuntime>();
+            var browserViewportService = new BrowserViewportService(NullLogger<BrowserViewportService>.Instance, jsRuntimeMock);
 
-            jsRuntimeMock
-                .Setup(expression => expression.InvokeAsync<BrowserWindowSize>("mudResizeListener.getBrowserWindowSize", It.IsAny<object[]>()))
-                .ReturnsAsync(GetBrowserSize())
-                .Verifiable();
+            jsRuntimeMock.InvokeAsync<BrowserWindowSize>("mudResizeListener.getBrowserWindowSize", Arg.Any<object[]>())
+                .Returns(GetBrowserSize());
 
             Context.Services.AddSingleton<IBrowserViewportService>(browserViewportService);
 
@@ -56,7 +54,7 @@ namespace MudBlazor.UnitTests.Components
                 comp.Find("p").TextContent.Should().Be("MudHidden content");
             }
 
-            jsRuntimeMock.Verify();
+            jsRuntimeMock.Received();
         }
 
         [Test]
@@ -66,13 +64,11 @@ namespace MudBlazor.UnitTests.Components
             {
                 return new BrowserWindowSize { Height = 1080, Width = 1920 }; //Xl
             }
-            var jsRuntimeMock = new Mock<IJSRuntime>();
-            var browserViewportService = new BrowserViewportService(NullLogger<BrowserViewportService>.Instance, jsRuntimeMock.Object);
+            var jsRuntimeMock = Substitute.For<IJSRuntime>();
+            var browserViewportService = new BrowserViewportService(NullLogger<BrowserViewportService>.Instance, jsRuntimeMock);
 
-            jsRuntimeMock
-                .Setup(expression => expression.InvokeAsync<BrowserWindowSize>("mudResizeListener.getBrowserWindowSize", It.IsAny<object[]>()))
-                .ReturnsAsync(GetBrowserSize())
-                .Verifiable();
+            jsRuntimeMock.InvokeAsync<BrowserWindowSize>("mudResizeListener.getBrowserWindowSize", Arg.Any<object[]>())
+                .Returns(GetBrowserSize());
 
             Context.Services.AddSingleton<IBrowserViewportService>(browserViewportService);
 
@@ -95,7 +91,7 @@ namespace MudBlazor.UnitTests.Components
 
             component.Instance.HiddenChangedHistory.Should().HaveCount(3).And.BeEquivalentTo(new[] { false, true, false });
 
-            jsRuntimeMock.Verify();
+            jsRuntimeMock.Received();
         }
 
         [Test]
@@ -105,13 +101,11 @@ namespace MudBlazor.UnitTests.Components
             {
                 return new BrowserWindowSize { Height = 640, Width = 960 }; //Md
             }
-            var jsRuntimeMock = new Mock<IJSRuntime>();
-            var browserViewportService = new BrowserViewportService(NullLogger<BrowserViewportService>.Instance, jsRuntimeMock.Object);
+            var jsRuntimeMock = Substitute.For<IJSRuntime>();
+            var browserViewportService = new BrowserViewportService(NullLogger<BrowserViewportService>.Instance, jsRuntimeMock);
 
-            jsRuntimeMock
-                .Setup(expression => expression.InvokeAsync<BrowserWindowSize>("mudResizeListener.getBrowserWindowSize", It.IsAny<object[]>()))
-                .ReturnsAsync(GetBrowserSize())
-                .Verifiable();
+            jsRuntimeMock.InvokeAsync<BrowserWindowSize>("mudResizeListener.getBrowserWindowSize", Arg.Any<object[]>())
+                .Returns(GetBrowserSize());
 
             Context.Services.AddSingleton<IBrowserViewportService>(browserViewportService);
 
@@ -127,7 +121,7 @@ namespace MudBlazor.UnitTests.Components
 
             Assert.Throws<ElementNotFoundException>(() => comp.Find("p"));
 
-            jsRuntimeMock.Verify();
+            jsRuntimeMock.Received();
         }
 
         [Test]
@@ -138,13 +132,11 @@ namespace MudBlazor.UnitTests.Components
                 return new BrowserWindowSize { Height = 640, Width = 960 }; //Md
             }
 
-            var jsRuntimeMock = new Mock<IJSRuntime>();
-            var browserViewportService = new BrowserViewportService(NullLogger<BrowserViewportService>.Instance, jsRuntimeMock.Object);
+            var jsRuntimeMock = Substitute.For<IJSRuntime>();
+            var browserViewportService = new BrowserViewportService(NullLogger<BrowserViewportService>.Instance, jsRuntimeMock);
 
-            jsRuntimeMock
-                .Setup(expression => expression.InvokeAsync<BrowserWindowSize>("mudResizeListener.getBrowserWindowSize", It.IsAny<object[]>()))
-                .ReturnsAsync(GetBrowserSize())
-                .Verifiable();
+            jsRuntimeMock.InvokeAsync<BrowserWindowSize>("mudResizeListener.getBrowserWindowSize", Arg.Any<object[]>())
+                .Returns(GetBrowserSize());
 
             Context.Services.AddSingleton<IBrowserViewportService>(browserViewportService);
 
@@ -160,7 +152,7 @@ namespace MudBlazor.UnitTests.Components
 
             Assert.Throws<ElementNotFoundException>(() => component.Find("p"));
 
-            jsRuntimeMock.Verify();
+            jsRuntimeMock.Received();
         }
 
         [Test]
@@ -171,13 +163,11 @@ namespace MudBlazor.UnitTests.Components
                 return new BrowserWindowSize { Height = 640, Width = 960 }; //Md
             }
 
-            var jsRuntimeMock = new Mock<IJSRuntime>();
-            var browserViewportService = new BrowserViewportService(NullLogger<BrowserViewportService>.Instance, jsRuntimeMock.Object);
+            var jsRuntimeMock = Substitute.For<IJSRuntime>();
+            var browserViewportService = new BrowserViewportService(NullLogger<BrowserViewportService>.Instance, jsRuntimeMock);
 
-            jsRuntimeMock
-                .Setup(expression => expression.InvokeAsync<BrowserWindowSize>("mudResizeListener.getBrowserWindowSize", It.IsAny<object[]>()))
-                .ReturnsAsync(GetBrowserSize())
-                .Verifiable();
+            jsRuntimeMock.InvokeAsync<BrowserWindowSize>("mudResizeListener.getBrowserWindowSize", Arg.Any<object[]>())
+                .Returns(GetBrowserSize());
 
             Context.Services.AddSingleton<IBrowserViewportService>(browserViewportService);
 
@@ -194,14 +184,14 @@ namespace MudBlazor.UnitTests.Components
 
             component.Instance.HiddenChangedHistory.Should().ContainSingle().And.BeEquivalentTo(new[] { false });
 
-            jsRuntimeMock.Verify();
+            jsRuntimeMock.Received();
         }
 
         [Test]
         public void WithinMudBreakpointProvider()
         {
-            var jsRuntimeMock = new Mock<IJSRuntime>();
-            var browserViewportService = new BrowserViewportService(NullLogger<BrowserViewportService>.Instance, jsRuntimeMock.Object);
+            var jsRuntimeMock = Substitute.For<IJSRuntime>();
+            var browserViewportService = new BrowserViewportService(NullLogger<BrowserViewportService>.Instance, jsRuntimeMock);
 
             Context.Services.AddSingleton<IBrowserViewportService>(browserViewportService);
 
@@ -220,7 +210,7 @@ namespace MudBlazor.UnitTests.Components
                 item.TextContent.Should().Be($"MudHidden content {i + 1}");
             }
 
-            jsRuntimeMock.Verify();
+            jsRuntimeMock.Received();
         }
 
         [Test]
@@ -230,17 +220,13 @@ namespace MudBlazor.UnitTests.Components
             {
                 return new BrowserWindowSize { Height = 640, Width = 960 }; //Md
             }
-            var jsRuntimeMock = new Mock<IJSRuntime>();
-            var browserViewportService = new BrowserViewportService(NullLogger<BrowserViewportService>.Instance, jsRuntimeMock.Object);
+            var jsRuntimeMock = Substitute.For<IJSRuntime>();
+            var browserViewportService = new BrowserViewportService(NullLogger<BrowserViewportService>.Instance, jsRuntimeMock);
 
-            jsRuntimeMock
-                .Setup(expression => expression.InvokeAsync<BrowserWindowSize>("mudResizeListener.getBrowserWindowSize", It.IsAny<object[]>()))
-                .ReturnsAsync(GetBrowserSize())
-                .Verifiable();
-            jsRuntimeMock
-                .Setup(expression => expression.InvokeAsync<IJSVoidResult>("mudResizeListenerFactory.listenForResize", It.IsAny<object[]>()))
-                .ReturnsAsync(Mock.Of<IJSVoidResult>())
-                .Verifiable();
+            jsRuntimeMock.InvokeAsync<BrowserWindowSize>("mudResizeListener.getBrowserWindowSize", Arg.Any<object[]>())
+                .Returns(GetBrowserSize());
+            jsRuntimeMock.InvokeAsync<IJSVoidResult>("mudResizeListenerFactory.listenForResize", Arg.Any<object[]>())
+                .Returns(Substitute.For< IJSVoidResult>());
 
             Context.Services.AddSingleton<IBrowserViewportService>(browserViewportService);
 
@@ -279,24 +265,21 @@ namespace MudBlazor.UnitTests.Components
 
             component.Instance.BreakpointChangedHistory.Should().HaveCount(3).And.BeEquivalentTo(new[] { Breakpoint.Md, Breakpoint.Lg, Breakpoint.Sm });
 
-            jsRuntimeMock.Verify();
+            jsRuntimeMock.Received();
         }
 
         [Test]
         public void TestSemaphore_RenderInParallel()
         {
-            var jsRuntimeMock = new Mock<IJSRuntime>();
-            var browserViewportService = new BrowserViewportService(NullLogger<BrowserViewportService>.Instance, jsRuntimeMock.Object);
+            var jsRuntimeMock = Substitute.For<IJSRuntime>();
+            var browserViewportService = new BrowserViewportService(NullLogger<BrowserViewportService>.Instance, jsRuntimeMock);
 
-            jsRuntimeMock
-                .Setup(expression => expression.InvokeAsync<BrowserWindowSize>("mudResizeListener.getBrowserWindowSize", It.IsAny<object[]>()))
-                .ReturnsAsync(new BrowserWindowSize { Height = 1080, Width = 1920 });
-            jsRuntimeMock
-                .Setup(expression => expression.InvokeAsync<IJSVoidResult>("mudResizeListenerFactory.listenForResize", It.IsAny<object[]>()))
-                .ReturnsAsync(Mock.Of<IJSVoidResult>(), TimeSpan.FromMilliseconds(200)).Verifiable();
-            jsRuntimeMock
-                .Setup(expression => expression.InvokeAsync<IJSVoidResult>("mudResizeListenerFactory.cancelListeners", It.IsAny<object[]>()))
-                .ReturnsAsync(Mock.Of<IJSVoidResult>);
+            jsRuntimeMock.InvokeAsync<BrowserWindowSize>("mudResizeListener.getBrowserWindowSize", Arg.Any<object[]>())
+                .Returns(new BrowserWindowSize { Height = 1080, Width = 1920 });
+            jsRuntimeMock.InvokeAsync<IJSVoidResult>("mudResizeListenerFactory.listenForResize", Arg.Any<object[]>())
+                .Returns(Substitute.For<IJSVoidResult>());
+            jsRuntimeMock.InvokeAsync<IJSVoidResult>("mudResizeListenerFactory.cancelListeners", Arg.Any<object[]>())
+                .Returns(Substitute.For<IJSVoidResult>());
 
             Context.Services.AddSingleton<IBrowserViewportService>(browserViewportService);
 

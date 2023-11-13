@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Bunit;
@@ -13,9 +14,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.JSInterop;
 using Microsoft.JSInterop.Infrastructure;
-using Moq;
 using MudBlazor.UnitTests.TestComponents;
 using MudBlazor.UnitTests.TestComponents.Popover;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
+using NSubstitute.ReceivedExtensions;
 using NUnit.Framework;
 using static Bunit.ComponentParameterFactory;
 
@@ -39,7 +42,7 @@ namespace MudBlazor.UnitTests.Components
         public void MudPopoverHandler_Constructor()
         {
             RenderFragment renderFragement = (tree) => { };
-            var mock = Mock.Of<IJSRuntime>();
+            var mock = Substitute.For<IJSRuntime>();
             Action updater = () => { };
 
             var handler = new MudPopoverHandler(renderFragement, mock, updater);
@@ -58,7 +61,7 @@ namespace MudBlazor.UnitTests.Components
         public void MudPopoverHandler_PreventNullValuesInConstructor()
         {
             RenderFragment renderFragement = (tree) => { };
-            var mock = Mock.Of<IJSRuntime>();
+            var mock = Substitute.For<IJSRuntime>();
             Action updater = () => { };
 
             Assert.Throws<ArgumentNullException>(() => new MudPopoverHandler(null, mock, updater));
@@ -71,7 +74,7 @@ namespace MudBlazor.UnitTests.Components
         public void MudPopoverHandler_SetComponentBaseParameters()
         {
             RenderFragment renderFragement = (tree) => { };
-            var mock = Mock.Of<IJSRuntime>();
+            var mock = Substitute.For<IJSRuntime>();
             Action updater = () => { };
 
             var handler = new MudPopoverHandler(renderFragement, mock, updater);
@@ -99,7 +102,7 @@ namespace MudBlazor.UnitTests.Components
         public void MudPopoverHandler_UpdateFragment()
         {
             RenderFragment initialRenderFragement = (tree) => { };
-            var mock = Mock.Of<IJSRuntime>();
+            var mock = Substitute.For<IJSRuntime>();
 
             var updateCounter = 0;
             Action updater = () => { updateCounter++; };
@@ -133,7 +136,7 @@ namespace MudBlazor.UnitTests.Components
         [Obsolete]
         public async Task MudPopoverHandler_UpdateFragmentAsync()
         {
-            var mock = Mock.Of<IJSRuntime>();
+            var mock = Substitute.For<IJSRuntime>();
 
             var updateCounter = 0;
 
@@ -170,7 +173,7 @@ namespace MudBlazor.UnitTests.Components
         [Obsolete]
         public async Task MudPopoverHandler_DetachAndUpdateFragmentAsync()
         {
-            var mock = Mock.Of<IJSRuntime>();
+            var mock = Substitute.For<IJSRuntime>();
 
             var updateCounter = 0;
 
@@ -201,16 +204,14 @@ namespace MudBlazor.UnitTests.Components
         {
             var connectTcs = new TaskCompletionSource<IJSVoidResult>();
 
-            var mock = new Mock<IJSRuntime>();
-            var handler = new MudPopoverHandler((tree) => { }, mock.Object, () => { });
+            var mock = Substitute.For<IJSRuntime>();
+            var handler = new MudPopoverHandler((tree) => { }, mock, () => { });
 
-            mock.Setup(x => x.InvokeAsync<IJSVoidResult>("mudPopover.connect", It.Is<object[]>(y => y.Length == 1 && (Guid)y[0] == handler.Id)))
-                .ReturnsAsync(Mock.Of<IJSVoidResult>())
-                .Verifiable();
+            mock.InvokeAsync<IJSVoidResult>("mudPopover.connect", Arg.Is<object[]>(y => y.Length == 1 && (Guid)y[0] == handler.Id))
+                .Returns(Substitute.For<IJSVoidResult>());
 
-            mock.Setup(x => x.InvokeAsync<IJSVoidResult>("mudPopover.disconnect", It.Is<object[]>(y => y.Length == 1 && (Guid)y[0] == handler.Id)))
-                .Returns(new ValueTask<IJSVoidResult>(connectTcs.Task))
-                .Verifiable();
+            mock.InvokeAsync<IJSVoidResult>("mudPopover.disconnect", Arg.Is<object[]>(y => y.Length == 1 && (Guid)y[0] == handler.Id))
+                .Returns(new ValueTask<IJSVoidResult>(connectTcs.Task));
 
 
             var comp = Context.RenderComponent<MudBadge>(p =>
@@ -230,8 +231,8 @@ namespace MudBlazor.UnitTests.Components
 
             completedTask.Should().NotBe(task2);
 
-            mock.Verify();
-            mock.VerifyNoOtherCalls();
+            mock.Received();
+            mock.ReceivedCalls().Count().Should().Be(2);
         }
 
         [Test]
@@ -240,16 +241,14 @@ namespace MudBlazor.UnitTests.Components
         {
             var connectTcs = new TaskCompletionSource<IJSVoidResult>();
 
-            var mock = new Mock<IJSRuntime>();
-            var handler = new MudPopoverHandler(_ => { }, mock.Object, () => { });
+            var mock = Substitute.For<IJSRuntime>();
+            var handler = new MudPopoverHandler(_ => { }, mock, () => { });
 
-            mock.Setup(x => x.InvokeAsync<IJSVoidResult>("mudPopover.connect", It.Is<object[]>(y => y.Length == 1 && (Guid)y[0] == handler.Id)))
-                .ReturnsAsync(Mock.Of<IJSVoidResult>())
-                .Verifiable();
+            mock.InvokeAsync<IJSVoidResult>("mudPopover.connect", Arg.Is<object[]>(y => y.Length == 1 && (Guid)y[0] == handler.Id))
+                .Returns(Substitute.For<IJSVoidResult>());
 
-            mock.Setup(x => x.InvokeAsync<IJSVoidResult>("mudPopover.disconnect", It.Is<object[]>(y => y.Length == 1 && (Guid)y[0] == handler.Id)))
-                .Returns(new ValueTask<IJSVoidResult>(connectTcs.Task))
-                .Verifiable();
+            mock.InvokeAsync<IJSVoidResult>("mudPopover.disconnect", Arg.Is<object[]>(y => y.Length == 1 && (Guid)y[0] == handler.Id))
+                .Returns(new ValueTask<IJSVoidResult>(connectTcs.Task));
 
 
             var comp = Context.RenderComponent<MudBadge>(p =>
@@ -264,12 +263,12 @@ namespace MudBlazor.UnitTests.Components
 
             var task1 = handler.Detach();
             var task2 = handler.UpdateFragmentAsync(newRenderFragement, comp.Instance, "my-new-extra-class", "my-new-extra-style:2px", true);
-            connectTcs.SetResult(Mock.Of<IJSVoidResult>());
+            connectTcs.SetResult(Substitute.For<IJSVoidResult>());
 
             await Task.WhenAll(task1, task2);
 
-            mock.Verify();
-            mock.VerifyNoOtherCalls();
+            mock.Received();
+            mock.ReceivedCalls().Count().Should().Be(2);
         }
 
         [Test(Description = "Remove in v7")]
@@ -277,7 +276,7 @@ namespace MudBlazor.UnitTests.Components
         public void MudPopoverHandler_UpdaterInvokationTest()
         {
             RenderFragment initialRenderFragement = (tree) => { };
-            var mock = Mock.Of<IJSRuntime>();
+            var mock = Substitute.For<IJSRuntime>();
 
             var updateCounter = 0;
             Action updater = () => { updateCounter++; };
@@ -311,7 +310,7 @@ namespace MudBlazor.UnitTests.Components
         [Obsolete]
         public async Task MudPopoverHandler_UpdaterInvocationAsync()
         {
-            var mock = Mock.Of<IJSRuntime>();
+            var mock = Substitute.For<IJSRuntime>();
 
             var updateCounter = 0;
 
@@ -332,7 +331,7 @@ namespace MudBlazor.UnitTests.Components
 
             for (int i = 0; i < 4; i++)
             {
-               await handler.UpdateFragmentAsync(newRenderFragment, comp.Instance, "my-extra-class", "my-extra-style:2px", i % 2 == 0);
+                await handler.UpdateFragmentAsync(newRenderFragment, comp.Instance, "my-extra-class", "my-extra-style:2px", i % 2 == 0);
             }
             updateCounter.Should().Be(4);
 
@@ -351,21 +350,17 @@ namespace MudBlazor.UnitTests.Components
             var handlerId = Guid.NewGuid();
 
             RenderFragment renderFragement = (tree) => { };
-            var mock = new Mock<IJSRuntime>();
-            mock.Setup(x =>
-            x.InvokeAsync<IJSVoidResult>(
-                "mudPopover.connect",
-                It.Is<object[]>(x => x.Length == 1 && (Guid)x[0] == handlerId))).ReturnsAsync(Mock.Of<IJSVoidResult>).Verifiable();
+            var mock = Substitute.For<IJSRuntime>();
+            mock.InvokeAsync<IJSVoidResult>("mudPopover.connect", Arg.Is<object[]>(x => x.Length == 1 && (Guid)x[0] == handlerId))
+            .Returns(Substitute.For<IJSVoidResult>());
 
-            mock.Setup(x =>
-            x.InvokeAsync<IJSVoidResult>(
-                "mudPopover.disconnect",
-                It.Is<object[]>(x => x.Length == 1 && (Guid)x[0] == handlerId))).ReturnsAsync(Mock.Of<IJSVoidResult>).Verifiable();
+            mock.InvokeAsync<IJSVoidResult>("mudPopover.disconnect", Arg.Is<object[]>(x => x.Length == 1 && (Guid)x[0] == handlerId))
+                .Returns(Substitute.For<IJSVoidResult>());
 
             var updateCounter = 0;
             Action updater = () => { updateCounter++; };
 
-            var handler = new MudPopoverHandler(renderFragement, mock.Object, updater);
+            var handler = new MudPopoverHandler(renderFragement, mock, updater);
             handlerId = handler.Id;
 
             handler.IsConnected.Should().BeFalse();
@@ -384,21 +379,17 @@ namespace MudBlazor.UnitTests.Components
             var handlerId = Guid.NewGuid();
 
             RenderFragment renderFragement = (tree) => { };
-            var mock = new Mock<IJSRuntime>();
-            mock.Setup(x =>
-            x.InvokeAsync<IJSVoidResult>(
-                "mudPopover.connect",
-                It.Is<object[]>(x => x.Length == 1 && (Guid)x[0] == handlerId))).ReturnsAsync(Mock.Of<IJSVoidResult>).Verifiable();
+            var mock = Substitute.For<IJSRuntime>();
+            mock.InvokeAsync<IJSVoidResult>("mudPopover.connect", Arg.Is<object[]>(x => x.Length == 1 && (Guid)x[0] == handlerId))
+            .Returns(Substitute.For<IJSVoidResult>());
 
-            mock.Setup(x =>
-            x.InvokeAsync<IJSVoidResult>(
-                "mudPopover.disconnect",
-                It.Is<object[]>(x => x.Length == 1 && (Guid)x[0] == handlerId))).ThrowsAsync(new TaskCanceledException()).Verifiable();
+            mock.InvokeAsync<IJSVoidResult>("mudPopover.disconnect", Arg.Is<object[]>(x => x.Length == 1 && (Guid)x[0] == handlerId))
+                .ThrowsAsync(new TaskCanceledException());
 
             var updateCounter = 0;
             Action updater = () => { updateCounter++; };
 
-            var handler = new MudPopoverHandler(renderFragement, mock.Object, updater);
+            var handler = new MudPopoverHandler(renderFragement, mock, updater);
             handlerId = handler.Id;
 
             await handler.Initialize();
@@ -414,21 +405,17 @@ namespace MudBlazor.UnitTests.Components
             var handlerId = Guid.NewGuid();
 
             RenderFragment renderFragement = (tree) => { };
-            var mock = new Mock<IJSRuntime>();
-            mock.Setup(x =>
-            x.InvokeAsync<IJSVoidResult>(
-                "mudPopover.connect",
-                It.Is<object[]>(x => x.Length == 1 && (Guid)x[0] == handlerId))).ReturnsAsync(Mock.Of<IJSVoidResult>).Verifiable();
+            var mock = Substitute.For<IJSRuntime>();
+            mock.InvokeAsync<IJSVoidResult>("mudPopover.connect", Arg.Is<object[]>(x => x.Length == 1 && (Guid)x[0] == handlerId))
+                .Returns(Substitute.For<IJSVoidResult>());
 
-            mock.Setup(x =>
-            x.InvokeAsync<IJSVoidResult>(
-                "mudPopover.disconnect",
-                It.Is<object[]>(x => x.Length == 1 && (Guid)x[0] == handlerId))).ThrowsAsync(new InvalidOperationException()).Verifiable();
+            mock.InvokeAsync<IJSVoidResult>("mudPopover.disconnect", Arg.Is<object[]>(x => x.Length == 1 && (Guid)x[0] == handlerId))
+                .ThrowsAsync(new InvalidOperationException());
 
             var updateCounter = 0;
             Action updater = () => { updateCounter++; };
 
-            var handler = new MudPopoverHandler(renderFragement, mock.Object, updater);
+            var handler = new MudPopoverHandler(renderFragement, mock, updater);
             handlerId = handler.Id;
 
             await handler.Initialize();
@@ -445,12 +432,11 @@ namespace MudBlazor.UnitTests.Components
         {
             var connectTcs = new TaskCompletionSource<IJSVoidResult>();
 
-            var mock = new Mock<IJSRuntime>();
-            var handler = new MudPopoverHandler(_ => { }, mock.Object, () => { });
+            var mock = Substitute.For<IJSRuntime>();
+            var handler = new MudPopoverHandler(_ => { }, mock, () => { });
 
-            mock.Setup(x => x.InvokeAsync<IJSVoidResult>("mudPopover.connect", It.Is<object[]>(y => y.Length == 1 && (Guid)y[0] == handler.Id)))
-                .Returns(new ValueTask<IJSVoidResult>(connectTcs.Task))
-                .Verifiable();
+            mock.InvokeAsync<IJSVoidResult>("mudPopover.connect", Arg.Is<object[]>(y => y.Length == 1 && (Guid)y[0] == handler.Id))
+                .Returns(new ValueTask<IJSVoidResult>(connectTcs.Task));
 
             _ = handler.Initialize();
             var task2 = handler.Detach();
@@ -459,8 +445,8 @@ namespace MudBlazor.UnitTests.Components
 
             completedTask.Should().NotBe(task2);
 
-            mock.Verify();
-            mock.VerifyNoOtherCalls();
+            mock.Received();
+            mock.ReceivedCalls().Count().Should().Be(2);
         }
 
         [Test]
@@ -469,35 +455,33 @@ namespace MudBlazor.UnitTests.Components
         {
             var connectTcs = new TaskCompletionSource<IJSVoidResult>();
 
-            var mock = new Mock<IJSRuntime>();
-            var handler = new MudPopoverHandler(_ => { }, mock.Object, () => { });
+            var mock = Substitute.For<IJSRuntime>();
+            var handler = new MudPopoverHandler(_ => { }, mock, () => { });
 
-            mock.Setup(x => x.InvokeAsync<IJSVoidResult>("mudPopover.connect", It.Is<object[]>(y => y.Length == 1 && (Guid)y[0] == handler.Id)))
-                .Returns(new ValueTask<IJSVoidResult>(connectTcs.Task))
-                .Verifiable();
+            mock.InvokeAsync<IJSVoidResult>("mudPopover.connect", Arg.Is<object[]>(y => y.Length == 1 && (Guid)y[0] == handler.Id))
+                .Returns(new ValueTask<IJSVoidResult>(connectTcs.Task));
 
-            mock.Setup(x => x.InvokeAsync<IJSVoidResult>("mudPopover.disconnect", It.Is<object[]>(y => y.Length == 1 && (Guid)y[0] == handler.Id)))
-                .ReturnsAsync(Mock.Of<IJSVoidResult>())
-                .Verifiable();
+            mock.InvokeAsync<IJSVoidResult>("mudPopover.disconnect", Arg.Is<object[]>(y => y.Length == 1 && (Guid)y[0] == handler.Id))
+                .Returns(Substitute.For<IJSVoidResult>());
 
             var task1 = handler.Initialize();
             var task2 = handler.Detach();
 
-            connectTcs.SetResult(Mock.Of<IJSVoidResult>());
+            connectTcs.SetResult(Substitute.For<IJSVoidResult>());
 
             await Task.WhenAll(task1, task2);
 
-            mock.Verify();
-            mock.VerifyNoOtherCalls();
+            mock.Received();
+            mock.ReceivedCalls().Count().Should().Be(2);
         }
 
         [Test]
         [Obsolete]
         public async Task MudPopoverHandler_DetachCalledBeforeInitialize_NoInteropShouldOccur()
         {
-            var mock = new Mock<IJSRuntime>();
+            var mock = Substitute.For<IJSRuntime>();
 
-            var handler = new MudPopoverHandler(_ => { }, mock.Object, () => { });
+            var handler = new MudPopoverHandler(_ => { }, mock, () => { });
 
             await handler.Detach();
             handler.IsConnected.Should().BeFalse();
@@ -505,7 +489,7 @@ namespace MudBlazor.UnitTests.Components
             await handler.Initialize();
             handler.IsConnected.Should().BeFalse();
 
-            mock.VerifyNoOtherCalls();
+            mock.ReceivedCalls().Count().Should().Be(2);
         }
 
         [Test]
@@ -519,63 +503,57 @@ namespace MudBlazor.UnitTests.Components
         [Obsolete]
         public async Task MudPopoverService_Constructor_NullOption()
         {
-            var mock = new Mock<IJSRuntime>();
+            var mock = Substitute.For<IJSRuntime>();
 
-            mock.Setup(x =>
-           x.InvokeAsync<IJSVoidResult>(
-               "mudPopover.initialize",
-               It.Is<object[]>(x => x.Length == 2 && (string)x[0] == "mudblazor-main-content" && (int)x[1] == 0))).ReturnsAsync(Mock.Of<IJSVoidResult>).Verifiable();
+            mock.InvokeAsync<IJSVoidResult>("mudPopover.initialize", Arg.Is<object[]>(x => x.Length == 2 && (string)x[0] == "mudblazor-main-content" && (int)x[1] == 0))
+            .Returns(Substitute.For<IJSVoidResult>());
 
             {
-                var service = new MudPopoverService(mock.Object, null);
+                var service = new MudPopoverService(mock, null);
                 await service.InitializeIfNeeded();
             }
             {
-                var service = new MudPopoverService(mock.Object);
+                var service = new MudPopoverService(mock);
                 await service.InitializeIfNeeded();
             }
-            mock.Verify();
+            mock.Received();
         }
 
         [Test]
         [Obsolete]
         public async Task MudPopoverService_Initialize_Catch_JSDisconnectedException()
         {
-            var mock = new Mock<IJSRuntime>();
+            var mock = Substitute.For<IJSRuntime>();
 
-            mock.Setup(x =>
-           x.InvokeAsync<IJSVoidResult>(
-               "mudPopover.initialize",
-               It.Is<object[]>(x => x.Length == 2 && (string)x[0] == "mudblazor-main-content" && (int)x[1] == 0))).ThrowsAsync(new JSDisconnectedException("JSDisconnectedException")).Verifiable();
+            mock.InvokeAsync<IJSVoidResult>("mudPopover.initialize", Arg.Is<object[]>(x => x.Length == 2 && (string)x[0] == "mudblazor-main-content" && (int)x[1] == 0))
+                .ThrowsAsync(new JSDisconnectedException("JSDisconnectedException"));
             {
-                var service = new MudPopoverService(mock.Object);
+                var service = new MudPopoverService(mock);
                 await service.InitializeIfNeeded();
             }
-            mock.Verify();
+            mock.Received();
         }
 
         [Test]
         [Obsolete]
         public async Task MudPopoverService_Initialize_Catch_TaskCanceledException()
         {
-            var mock = new Mock<IJSRuntime>();
+            var mock = Substitute.For<IJSRuntime>();
 
-            mock.Setup(x =>
-           x.InvokeAsync<IJSVoidResult>(
-               "mudPopover.initialize",
-               It.Is<object[]>(x => x.Length == 2 && (string)x[0] == "mudblazor-main-content" && (int)x[1] == 0))).ThrowsAsync(new TaskCanceledException()).Verifiable();
+            mock.InvokeAsync<IJSVoidResult>("mudPopover.initialize", Arg.Is<object[]>(x => x.Length == 2 && (string)x[0] == "mudblazor-main-content" && (int)x[1] == 0))
+                .ThrowsAsync(new TaskCanceledException());
             {
-                var service = new MudPopoverService(mock.Object);
+                var service = new MudPopoverService(mock);
                 await service.InitializeIfNeeded();
             }
-            mock.Verify();
+            mock.Received();
         }
 
         [Test]
         [Obsolete]
         public async Task MudPopoverService_Constructor_OptionWithCustomClass()
         {
-            var mock = new Mock<IJSRuntime>();
+            var mock = Substitute.For<IJSRuntime>();
 
             var option = new PopoverOptions
             {
@@ -583,34 +561,30 @@ namespace MudBlazor.UnitTests.Components
                 FlipMargin = 12,
             };
 
-            var optionMock = new Mock<IOptions<PopoverOptions>>();
-            optionMock.SetupGet(x => x.Value).Returns(option);
+            var optionMock = Substitute.For<IOptions<PopoverOptions>>();
+            optionMock.Value.Returns(option);
 
-            mock.Setup(x =>
-           x.InvokeAsync<IJSVoidResult>(
-               "mudPopover.initialize",
-               It.Is<object[]>(x => x.Length == 2 && (string)x[0] == "my-custom-class" && (int)x[1] == 12))).ReturnsAsync(Mock.Of<IJSVoidResult>).Verifiable();
+            mock.InvokeAsync<IJSVoidResult>("mudPopover.initialize", Arg.Is<object[]>(x => x.Length == 2 && (string)x[0] == "my-custom-class" && (int)x[1] == 12))
+                .Returns(Substitute.For<IJSVoidResult>());
 
-            var service = new MudPopoverService(mock.Object, optionMock.Object);
+            var service = new MudPopoverService(mock, optionMock);
 
             await service.InitializeIfNeeded();
 
-            mock.Verify();
+            mock.Received();
         }
 
         [Test]
         [Obsolete]
         public async Task MudPopoverService_CallInitializeOnlyOnce()
         {
-            var mock = new Mock<IJSRuntime>();
+            var mock = Substitute.For<IJSRuntime>();
 
-            mock.Setup(x =>
-           x.InvokeAsync<IJSVoidResult>(
-               "mudPopover.initialize",
-               It.Is<object[]>(x => x.Length == 2 && (string)x[0] == "mudblazor-main-content" && (int)x[1] == 0))).ReturnsAsync(Mock.Of<IJSVoidResult>(), TimeSpan.FromMilliseconds(300)).Verifiable();
+            mock.InvokeAsync<IJSVoidResult>("mudPopover.initialize", Arg.Is<object[]>(x => x.Length == 2 && (string)x[0] == "mudblazor-main-content" && (int)x[1] == 0))
+                .Returns(Substitute.For<IJSVoidResult>());
 
             Task[] tasks = new Task[5];
-            var service = new MudPopoverService(mock.Object);
+            var service = new MudPopoverService(mock);
 
             for (int i = 0; i < 5; i++)
             {
@@ -619,17 +593,15 @@ namespace MudBlazor.UnitTests.Components
 
             Task.WaitAll(tasks);
 
-            mock.Verify(x =>
-           x.InvokeAsync<IJSVoidResult>(
-               "mudPopover.initialize",
-               It.Is<object[]>(x => x.Length == 2 && (string)x[0] == "mudblazor-main-content" && (int)x[1] == 0)), Times.Once());
+            await mock.InvokeAsync<IJSVoidResult>("mudPopover.initialize", Arg.Is<object[]>(x => x.Length == 2 && (string)x[0] == "mudblazor-main-content" && (int)x[1] == 0));
+            mock.Received(1);
         }
 
         [Test]
         [Obsolete]
         public async Task MudPopoverService_OnlyDisposeIfConnected()
         {
-            var service = new MudPopoverService(Mock.Of<IJSRuntime>(MockBehavior.Strict));
+            var service = new MudPopoverService(Substitute.For<IJSRuntime>());
             await service.DisposeAsync();
         }
 
@@ -637,7 +609,7 @@ namespace MudBlazor.UnitTests.Components
         [Obsolete]
         public async Task MudPopoverService_DisposeAsync()
         {
-            var mock = new Mock<IJSRuntime>();
+            var mock = Substitute.For<IJSRuntime>();
 
             mock.Setup(x =>
            x.InvokeAsync<IJSVoidResult>(

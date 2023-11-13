@@ -8,8 +8,8 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using Microsoft.JSInterop.Infrastructure;
-using Moq;
 using MudBlazor.UnitTests.TestComponents;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace MudBlazor.UnitTests.Components
@@ -106,16 +106,16 @@ namespace MudBlazor.UnitTests.Components
         [Test]
         public void DropZone_TestJsCalls()
         {
-            var jsRuntimeMock = new Mock<IJSRuntime>(MockBehavior.Strict);
+            var jsRuntimeMock = Substitute.For<IJSRuntime>();
 
-            Context.Services.AddSingleton(typeof(IJSRuntime), jsRuntimeMock.Object);
+            Context.Services.AddSingleton(typeof(IJSRuntime), jsRuntimeMock);
 
-            jsRuntimeMock.Setup(x => x.InvokeAsync<IJSVoidResult>("mudDragAndDrop.initDropZone", It.Is<object[]>(y => y.Length == 1 && Guid.Parse(y[0].ToString()) != Guid.Empty)))
-                .ReturnsAsync(Mock.Of<IJSVoidResult>(), TimeSpan.FromMilliseconds(200)).Verifiable();
+            jsRuntimeMock.InvokeAsync<IJSVoidResult>("mudDragAndDrop.initDropZone", Arg.Is<object[]>(y => y.Length == 1 && Guid.Parse(y[0].ToString()) != Guid.Empty))
+                .Returns(Substitute.For<IJSVoidResult>());
 
             var comp = Context.RenderComponent<DropzoneBasicTest>();
 
-            jsRuntimeMock.Verify();
+            jsRuntimeMock.Received();
         }
 
         [Test]
