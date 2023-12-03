@@ -443,7 +443,7 @@ namespace MudBlazor
                 ActivePanelIndex = previewArgs.PanelIndex;
                 await ActivePanel?.OnClick.InvokeAsync(ev);
 
-                CenterScrollPositionAroundSelectedItem();
+                CenterScrollPositionAroundSelectedItem(index);
                 SetSliderState();
                 SetScrollButtonVisibility();
                 SetScrollabilityStates();
@@ -609,7 +609,7 @@ namespace MudBlazor
         private bool IsSliderPositionDetermined => _activePanelIndex > 0 && _sliderPosition > 0 ||
                                                    _activePanelIndex <= 0;
 
-        private void GetToolbarContentSize() => _toolbarContentSize = GetRelevantSize(_tabsContentSize);
+        private void GetToolbarContentSize() => _toolbarContentSize = GetRelevantSize(_tabsContentSize) - (_showScrollButtons ? 48 : 0);
 
         private void GetAllTabsSize()
         {
@@ -706,16 +706,20 @@ namespace MudBlazor
             return count;
         }
 
-        private void ScrollToItem(MudTabPanel panel)
+        private void ScrollToItem(MudTabPanel panel, bool isLast = false)
         {
-            var position = GetLengthOfPanelItems(panel);
+            var position = GetLengthOfPanelItems(panel, isLast && _showScrollButtons);
+            /*if (_showScrollButtons && isLast)
+                position += 48;*/
+            if (position > _toolbarContentSize )
+                position = _toolbarContentSize;
             _scrollPosition = RightToLeft ? -position : position;
         }
 
         private bool IsAfterLastPanelIndex(int index) => index >= _panels.Count;
         private bool IsBeforeFirstPanelIndex(int index) => index < 0;
 
-        private void CenterScrollPositionAroundSelectedItem()
+        private void CenterScrollPositionAroundSelectedItem(int index)
         {
             MudTabPanel panelToStart = ActivePanel;
             var length = GetPanelLength(panelToStart);
@@ -737,8 +741,6 @@ namespace MudBlazor
 
                 if (length >= _toolbarContentSize)
                 {
-                    _scrollIndex = _panels.IndexOf(panelToStart);
-                    ScrollToItem(panelToStart);
                     break;
                 }
 
@@ -756,8 +758,6 @@ namespace MudBlazor
 
                 if (length < 0)
                 {
-                    _scrollIndex = _panels.IndexOf(panelToStart);
-                    ScrollToItem(panelToStart);
                     break;
                 }
 
@@ -768,7 +768,7 @@ namespace MudBlazor
             }
 
             _scrollIndex = _panels.IndexOf(panelToStart);
-            ScrollToItem(panelToStart);
+            ScrollToItem(panelToStart, index + 1 == _panels.Count);
 
             SetScrollabilityStates();
         }
